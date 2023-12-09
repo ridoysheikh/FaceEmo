@@ -1,0 +1,73 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Facial Emotion Recognition</title>
+</head>
+<body class="flex flex-col justify-center items-center py-8 px-2 lg:px-8" style="background-color: rgb(84, 173, 173);">
+
+    <!-- <img src="😐" alt="" id="image" class="h-32 w-32 bg-black"> -->
+    <p id="text" class="text-9xl drop-shadow-lg">😐</p>
+
+    <p id="text2" class="text-2xl text-center mt-4 text-white">You Look .... </p>
+
+    <div class="bg-white mt-6 pt-6 rounded-lg shadow-lg w-96 lg:w-[600px]" id="camera-wrapper">
+        <video src="" id="video" class="w-full bg-black rounded-b-lg bg-cover" autoplay></video>
+        <canvas id="canvas" class="hidden w-full h-full"></canvas>
+    </div>
+    
+</body>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+
+    console.log(video.offsetWidth, video.offsetHeight);
+
+    async function camera() {
+   	let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    console.log(stream);
+	video.srcObject = stream;
+    };
+    camera();
+
+    function getimg() {
+    canvas.width = video.clientWidth;
+    canvas.height = video.clientHeight;
+
+   	canvas.getContext('2d').drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
+   	let url = canvas.toDataURL('image/jpeg');
+
+    let formData = new FormData();
+    formData.append('image', url);
+
+    fetch('{% url "react" %}', {
+    method: 'POST',
+    body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+    if(data.emoji) {
+        document.getElementById('text').innerText = data.emoji;
+        document.getElementById('text2').innerText = `You Look ${data.emotion} !`;
+    } else {
+        document.getElementById('text').innerText = '😐';
+        document.getElementById('text2').innerText = 'You Look ....!';
+    }
+    
+
+    })
+    .catch(error => {
+    console.error('Error:', error);
+    });
+
+    }
+    
+    setInterval(getimg, 700);
+
+
+</script>
+
+</html>
